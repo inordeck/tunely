@@ -70,6 +70,7 @@ app.get('/', function homepage (req, res) {
  * JSON API Endpoints
  */
 
+
 app.get('/api', function api_index (req, res){
   res.json({
     message: "Welcome to tunely!",
@@ -81,31 +82,35 @@ app.get('/api', function api_index (req, res){
   });
 });
 
+
 // get all albums
-app.get('/api/albums', function album_index(req, res){
-  db.Album.find({}, function(err, albums){
+app.get('/api/albums', function album_index(req, res) {
+  db.Album.find({}, function(err, albums) {
     res.json(albums);
   });
 });
 
+
 // post new album
-app.post('/api/albums', function albums_index(req, res){
-  var newAlbum = new db.Album({
-    artistName: req.body.artistName,
-    name: req.body.name,
-    releaseDate: req.body.releaseDate,
-    genres: [ req.body.genres ]
-  });
-  console.log(newAlbum);
-  newAlbum.save(function(err, album){
-    if (err){
-      return console.log("save error: " + err);
+app.post('/api/albums', function album_new(req, res) {
+  var newArtistName = req.body.artistName;
+  var newName = req.body.name;
+  var newReleaseDate = req.body.releaseDate;
+  var newGenres = [req.body.genres];
+  var newAlbum = {
+    artistName: newArtistName,
+    name: newName,
+    releaseDate: newReleaseDate,
+    genres: newGenres
+  };
+  db.Album.create(newAlbum, function(err, album) {
+    if (err) {
+      res.send("error: " + err);
     }
-    // console.log("saved " + album.name);
-    albums.push(newAlbum);
-    res.json(album);
+  res.json(album);
   });
 });
+
 
 /**********
  * SERVER *

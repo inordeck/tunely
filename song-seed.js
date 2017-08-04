@@ -35,7 +35,7 @@ sampleSongs.push({ name: 'Stronger',
 
 db.Album.remove({}, function(err, songs){
 
-  db.Album.create(songsList, function(err, songs){
+  db.Album.create(sampleSongs, function(err, songs){
 
     if (err) { return console.log('ERROR', err); }
     console.log("all songs:", songs);

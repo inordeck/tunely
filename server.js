@@ -2,16 +2,18 @@
 
 //require express in our app
 var express = require('express');
+
 // generate a new express app and call it 'app'
 var app = express();
+var bodyParser = require('body-parser');
+var util = require('util');
 
 // serve static files from public folder
 app.use(express.static(__dirname + '/public'));
 
-var bodyParser = require('body-parser');
+// body parser setup
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 
 /************
  * DATABASE *
@@ -51,8 +53,6 @@ albums.push({
             });
 */
 
-
-
 /**********
  * ROUTES *
  **********/
@@ -65,11 +65,9 @@ app.get('/', function homepage (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
-
 /*
  * JSON API Endpoints
  */
-
 
 app.get('/api', function api_index (req, res){
   res.json({
@@ -82,35 +80,57 @@ app.get('/api', function api_index (req, res){
   });
 });
 
-
 // get all albums
 app.get('/api/albums', function album_index(req, res) {
   db.Album.find({}, function(err, albums) {
+    if (err) {
+      console.log(err);
+      return;
+    }
     res.json(albums);
   });
 });
 
-
 // post new album
 app.post('/api/albums', function album_new(req, res) {
-  var newArtistName = req.body.artistName;
-  var newName = req.body.name;
-  var newReleaseDate = req.body.releaseDate;
-  var newGenres = [req.body.genres];
-  var newAlbum = {
-    artistName: newArtistName,
-    name: newName,
-    releaseDate: newReleaseDate,
-    genres: newGenres
-  };
-  db.Album.create(newAlbum, function(err, album) {
+  db.Album.create({
+    artistName: req.body.artistName,
+    name: req.body.name,
+    releaseDate: req.body.releaseDate,
+    genres: [req.body.genres]
+  }, function(err, doc) {
     if (err) {
-      res.send("error: " + err);
+      console.log("error: " + err);
+      return;
     }
-  res.json(album);
+    doc.save();
+  });
+  res.json(req.body);
+});
+
+// songs post route
+app.post('/api/albums/:album_id/songs', function(req, res) {
+  console.log("song post route is up?");
+  console.log(req.params);
+  console.log('req.body.song: ' + req.body.song + ' req.body.trackNumber: ' + req.body.trackNumber);
+  db.Album.findOne({ '_id': req.params.album_id }, function(err, doc) {
+    if(err) throw err;
+    doc.songs.push({ name: req.body.song, trackNumber: req.body.trackNumber });
+    console.log('after push: ' + doc.songs);
+    doc.save(function(err, savedDoc) {
+      res.json(doc);
+    });
   });
 });
 
+// song get route
+app.get('/api/albums/:id', function(req, res) {
+  db.Album.findOne({ '_id': req.params.id }, function(err, doc) {
+    if (err) throw err;
+    console.dir('get doc: ' + doc);
+    res.json(doc);
+  });
+});
 
 /**********
  * SERVER *
